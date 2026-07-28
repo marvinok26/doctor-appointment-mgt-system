@@ -18,30 +18,33 @@ public class GetAdminStatsQueryHandler(IUnitOfWork unitOfWork, IIdentityService 
 {
     public async Task<AdminStatsDto> Handle(GetAdminStatsQuery request, CancellationToken ct)
     {
-        var totalDoctorsTask = unitOfWork.Doctors.Query().CountAsync(ct);
-        var totalPatientsTask = unitOfWork.Patients.Query().CountAsync(ct);
-        var totalUsersTask = identityService.CountAllUsersAsync(ct);
+        // Sequential, not Task.WhenAll: every one of these shares the same scoped DbContext
+        // (via IUnitOfWork/UserManager), and EF Core's DbContext throws on concurrent operations
+        // from the same instance — this single round trip to the client is still one HTTP call,
+        // it just can't fan out into parallel DB calls underneath.
+        var totalDoctors = await unitOfWork.Doctors.Query().CountAsync(ct);
+        var totalPatients = await unitOfWork.Patients.Query().CountAsync(ct);
+        var totalUsers = await identityService.CountAllUsersAsync(ct);
 
-        var appointmentsByStatusTask = unitOfWork.Appointments.Query()
+        var appointmentsByStatus = await unitOfWork.Appointments.Query()
             .GroupBy(a => a.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync(ct);
 
         var today = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
-        var appointmentsTodayTask = unitOfWork.Appointments.Query()
+        var appointmentsToday = await unitOfWork.Appointments.Query()
             .CountAsync(a => a.ScheduledStartUtc >= today && a.ScheduledStartUtc < today.AddDays(1), ct);
 
-        var roleCountTasks = Roles.All.Select(async role => (Role: role, Count: await identityService.CountUsersInRoleAsync(role, ct)));
-
-        await Task.WhenAll(totalDoctorsTask, totalPatientsTask, totalUsersTask, appointmentsByStatusTask, appointmentsTodayTask);
-        var roleCounts = await Task.WhenAll(roleCountTasks);
+        var usersByRole = new Dictionary<string, int>();
+        foreach (var role in Roles.All)
+            usersByRole[role] = await identityService.CountUsersInRoleAsync(role, ct);
 
         return new AdminStatsDto(
-            await totalUsersTask,
-            await totalDoctorsTask,
-            await totalPatientsTask,
-            roleCounts.ToDictionary(r => r.Role, r => r.Count),
-            (await appointmentsByStatusTask).ToDictionary(x => x.Status.ToString(), x => x.Count),
-            await appointmentsTodayTask);
+            totalUsers,
+            totalDoctors,
+            totalPatients,
+            usersByRole,
+            appointmentsByStatus.ToDictionary(x => x.Status.ToString(), x => x.Count),
+            appointmentsToday);
     }
 }

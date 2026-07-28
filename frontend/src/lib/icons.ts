@@ -31,6 +31,7 @@ import {
   faClipboardList,
   faEye,
   faEyeSlash,
+  faBars,
   faUserGear,
   faUserLock,
   faUserCheck,
@@ -84,6 +85,7 @@ export const icons = {
   externalLink: faArrowUpRightFromSquare,
   reminder: faEnvelopeOpenText,
   dateOfBirth: faCalendarDay,
+  menu: faBars,
   showPassword: faEye,
   hidePassword: faEyeSlash,
 } as const;

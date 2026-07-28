@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, postLoginRoute } from "@/lib/auth-context";
 import { icons } from "@/lib/icons";
 import { EcgTrace } from "@/components/landing/EcgTrace";
 
@@ -130,7 +130,7 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
+    if (!loading && user) router.replace(postLoginRoute(user));
   }, [loading, user, router]);
 
   return (

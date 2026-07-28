@@ -18,7 +18,18 @@ export function getAppointmentHubConnection(): signalR.HubConnection {
       accessTokenFactory: () => getAccessToken() ?? "",
     })
     .withAutomaticReconnect()
+    // Critical: the SignalR client's default logger calls console.error() on every failed
+    // negotiate/reconnect attempt (e.g. a 401 while the token is briefly stale). Next.js's dev
+    // overlay treats any console.error as a blocking full-screen error — with the default log
+    // level, a single expected reconnect failure was enough to block the entire page, which is
+    // exactly what looked like "unable to sign in." Errors are still visible in the browser
+    // console for real debugging; they just don't hijack the UI anymore.
+    .configureLogging(signalR.LogLevel.Critical)
     .build();
+
+  connection.onreconnecting(() => {
+    // Expected during token refresh/network blips — intentionally silent (see above).
+  });
 
   return connection;
 }

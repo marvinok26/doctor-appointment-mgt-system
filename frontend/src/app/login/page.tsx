@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useAuth, isApiError } from "@/lib/auth-context";
+import { useAuth, isApiError, postLoginRoute } from "@/lib/auth-context";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthField } from "@/components/auth/AuthField";
 import { AuthButton } from "@/components/auth/AuthButton";
@@ -40,8 +40,8 @@ export default function LoginPage() {
       const result = await login(values.email, values.password);
       if (result.mfaRequired && result.challengeToken) {
         setChallengeToken(result.challengeToken);
-      } else {
-        router.push("/dashboard");
+      } else if (result.user) {
+        router.push(postLoginRoute(result.user));
       }
     } catch (err) {
       setServerError(isApiError(err) ? err.message : "Unable to sign in.");
@@ -55,8 +55,8 @@ export default function LoginPage() {
     setServerError(null);
     setSubmitting(true);
     try {
-      await verifyMfa(challengeToken, mfaCode);
-      router.push("/dashboard");
+      const user = await verifyMfa(challengeToken, mfaCode);
+      if (user) router.push(postLoginRoute(user));
     } catch (err) {
       setServerError(isApiError(err) ? err.message : "Invalid authentication code.");
     } finally {

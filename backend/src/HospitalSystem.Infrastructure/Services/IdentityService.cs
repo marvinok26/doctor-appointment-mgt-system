@@ -103,7 +103,11 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
                     || u.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
 
             var pagedInRole = filtered.OrderBy(u => u.FullName).Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            var accountsInRole = await Task.WhenAll(pagedInRole.Select(ToUserAccountAsync));
+            // Sequential, not Task.WhenAll: these share one scoped UserManager/DbContext, which
+            // EF Core does not allow concurrent operations against (see ListUsersAsync's other branch).
+            var accountsInRole = new List<UserAccount>(pagedInRole.Count);
+            foreach (var user in pagedInRole)
+                accountsInRole.Add(await ToUserAccountAsync(user));
             return (accountsInRole, filtered.Count);
         }
 
@@ -113,7 +117,11 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
 
         var totalCount = await query.CountAsync(ct);
         var pageOfUsers = await query.OrderBy(u => u.FullName).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
-        var accounts = await Task.WhenAll(pageOfUsers.Select(ToUserAccountAsync));
+
+        // Sequential, not Task.WhenAll — see the role-filtered branch above for why.
+        var accounts = new List<UserAccount>(pageOfUsers.Count);
+        foreach (var user in pageOfUsers)
+            accounts.Add(await ToUserAccountAsync(user));
 
         return (accounts, totalCount);
     }

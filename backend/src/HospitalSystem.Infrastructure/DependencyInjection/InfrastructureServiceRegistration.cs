@@ -20,7 +20,15 @@ public static class InfrastructureServiceRegistration
             options.UseSqlServer(configuration.GetConnectionString("Default"),
                 sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
 
-        services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+        // AddIdentityCore (not AddIdentity) deliberately: AddIdentity also registers Identity's
+        // own cookie authentication scheme and pins it as the default authenticate/challenge
+        // scheme, which wins over the JwtBearer scheme registered below even when JwtBearer is
+        // passed as AddAuthentication's default — the two "default scheme" settings aren't the
+        // same thing, and Identity's is more specific. Every [Authorize] endpoint was silently
+        // challenging as if this were a cookie-based MVC app (redirecting to /Account/Login)
+        // instead of returning a JWT-style 401, since this API never uses cookie sign-in.
+        // AddIdentityCore only wires up UserManager/RoleManager/password hashing — no scheme.
+        services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.Password.RequiredLength = 10;
                 options.Password.RequireNonAlphanumeric = true;
@@ -30,6 +38,7 @@ public static class InfrastructureServiceRegistration
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
                 options.User.RequireUniqueEmail = true;
             })
+            .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 

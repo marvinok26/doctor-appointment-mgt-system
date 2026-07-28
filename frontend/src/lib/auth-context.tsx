@@ -9,10 +9,15 @@ import type { LoginResult, Role, UserProfile } from "@/types/api";
 interface AuthContextValue {
   user: UserProfile | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ mfaRequired: boolean; challengeToken?: string }>;
-  verifyMfa: (challengeToken: string, code: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ mfaRequired: boolean; challengeToken?: string; user?: UserProfile }>;
+  verifyMfa: (challengeToken: string, code: string) => Promise<UserProfile | undefined>;
   logout: () => Promise<void>;
   hasRole: (...roles: Role[]) => boolean;
+}
+
+/** Admins land in the admin console; every other role lands on the general dashboard. */
+export function postLoginRoute(user: UserProfile): string {
+  return user.roles.includes("Admin") ? "/admin" : "/dashboard";
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(result.user);
     }
 
-    return { mfaRequired: false };
+    return { mfaRequired: false, user: result.user ?? undefined };
   }, []);
 
   const verifyMfa = useCallback(async (challengeToken: string, code: string) => {
@@ -78,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(result.accessToken);
       setUser(result.user);
     }
+    return result.user ?? undefined;
   }, []);
 
   const logout = useCallback(async () => {
