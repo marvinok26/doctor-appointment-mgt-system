@@ -28,8 +28,9 @@ const navItems: NavItem[] = [
   { href: "/notifications", label: "Notifications", icon: icons.notifications, roles: ["Admin", "Doctor", "Receptionist", "Patient"] },
 ];
 
+// No "Overview" entry here — that content lives on /dashboard itself for Admins
+// (see AdminOverviewSection), so "Dashboard" above already is the admin's overview.
 const adminItems: NavItem[] = [
-  { href: "/admin", label: "Overview", icon: icons.admin, roles: ["Admin"] },
   { href: "/admin/users", label: "Users", icon: icons.manageUsers, roles: ["Admin"] },
   { href: "/admin/audit-log", label: "Audit log", icon: icons.auditLog, roles: ["Admin"] },
 ];
@@ -64,7 +65,7 @@ export function Sidebar({
 }) {
   const { hasRole } = useAuth();
   const pathname = usePathname();
-  const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
+  const isActive = (href: string) => pathname.startsWith(href);
 
   const content = (
     <div className="flex h-full flex-col">

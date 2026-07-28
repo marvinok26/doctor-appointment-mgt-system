@@ -63,7 +63,12 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default function AdminOverviewPage() {
+/**
+ * The Admin role's dashboard content — stat cards, charts, and activity summaries. Lives as its
+ * own component (not a route) so it renders directly inside /dashboard for Admins instead of a
+ * separate "/admin" overview page duplicating what "dashboard" already means.
+ */
+export function AdminOverviewSection() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<AuditLogEntry[]>([]);
   const [todaysAppointments, setTodaysAppointments] = useState<Appointment[]>([]);
@@ -99,11 +104,6 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Overview</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">System-wide stats, activity, and today&apos;s schedule.</p>
-      </div>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={icons.account} label="Total accounts" value={stats.totalUsers} accent="#2a78d6" />
         <StatCard icon={icons.doctors} label="Doctors" value={stats.totalDoctors} accent="#1baf7a" />

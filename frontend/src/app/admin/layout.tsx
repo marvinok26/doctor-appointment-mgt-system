@@ -4,19 +4,19 @@ import { usePathname } from "next/navigation";
 import { RequireAuth } from "@/components/RequireAuth";
 
 const pageLabels: Record<string, string> = {
-  "/admin": "Overview",
   "/admin/users": "Users",
   "/admin/audit-log": "Audit log",
 };
 
-// Navigation between these three pages now lives in the sidebar (see Sidebar.tsx's "Admin"
-// section) — this layout just wraps them with the Admin-only guard and a matching breadcrumb.
+// The overview/stats content lives on /dashboard for Admins (see AdminOverviewSection) rather
+// than a separate "/admin" page, so there's no single "Admin home" to link the crumb to — Users
+// and Audit log are siblings under the Admin section of the sidebar, not children of an overview.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const label = pageLabels[pathname];
 
   return (
-    <RequireAuth roles={["Admin"]} crumbs={[{ label: "Admin", href: "/admin" }, ...(label && label !== "Overview" ? [{ label }] : [])]}>
+    <RequireAuth roles={["Admin"]} crumbs={[{ label: "Admin" }, ...(label ? [{ label }] : [])]}>
       {children}
     </RequireAuth>
   );

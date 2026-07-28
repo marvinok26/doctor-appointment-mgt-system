@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { RequireAuth } from "@/components/RequireAuth";
+import { AdminOverviewSection } from "@/components/admin/AdminOverviewSection";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api-client";
 import { icons } from "@/lib/icons";
@@ -28,7 +29,27 @@ function useCount(path: string, deps: unknown[]) {
   return count;
 }
 
-function DashboardContent() {
+function DashboardHeader() {
+  const { user } = useAuth();
+  return (
+    <div>
+      <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Welcome back, {user?.fullName}</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        Signed in as {user?.roles.join(", ")}
+        {user && !user.mfaEnabled && (
+          <>
+            {" "}·{" "}
+            <Link href="/settings/mfa" className="text-sky-600 hover:underline">
+              Enable two-factor authentication
+            </Link>
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
+function StaffPatientDashboard() {
   const { user, hasRole } = useAuth();
   const upcomingCount = useCount("/api/v1/appointments", [user?.id, "Requested"]);
   const doctorCount = useCount("/api/v1/doctors", [user?.id]);
@@ -39,22 +60,7 @@ function DashboardContent() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Welcome back, {user?.fullName}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Signed in as {user?.roles.join(", ")}
-          {user && !user.mfaEnabled && (
-            <>
-              {" "}·{" "}
-              <Link href="/settings/mfa" className="text-sky-600 hover:underline">
-                Enable two-factor authentication
-              </Link>
-            </>
-          )}
-        </p>
-      </div>
-
+    <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {cards.map((card) => (
           <Link
@@ -79,13 +85,19 @@ function DashboardContent() {
           <Link href="/appointments" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">
             {hasRole("Patient") ? "Book an appointment" : "View appointments"}
           </Link>
-          {hasRole("Admin") && (
-            <Link href="/doctors" className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100">
-              Manage doctors
-            </Link>
-          )}
         </div>
       </div>
+    </>
+  );
+}
+
+function DashboardContent() {
+  const { hasRole } = useAuth();
+
+  return (
+    <div className="flex flex-col gap-6">
+      <DashboardHeader />
+      {hasRole("Admin") ? <AdminOverviewSection /> : <StaffPatientDashboard />}
     </div>
   );
 }

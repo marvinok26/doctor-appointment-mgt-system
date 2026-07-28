@@ -15,11 +15,6 @@ interface AuthContextValue {
   hasRole: (...roles: Role[]) => boolean;
 }
 
-/** Admins land in the admin console; every other role lands on the general dashboard. */
-export function postLoginRoute(user: UserProfile): string {
-  return user.roles.includes("Admin") ? "/admin" : "/dashboard";
-}
-
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
