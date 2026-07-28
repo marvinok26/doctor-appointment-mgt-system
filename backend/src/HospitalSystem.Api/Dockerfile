@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY backend/HospitalSystem.sln ./
 COPY backend/src/HospitalSystem.Domain/HospitalSystem.Domain.csproj src/HospitalSystem.Domain/
 COPY backend/src/HospitalSystem.Application/HospitalSystem.Application.csproj src/HospitalSystem.Application/
 COPY backend/src/HospitalSystem.Infrastructure/HospitalSystem.Infrastructure.csproj src/HospitalSystem.Infrastructure/
@@ -16,8 +15,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
 
-RUN useradd --uid 1000 appuser && chown -R appuser /app
-USER appuser
+# Microsoft's .NET runtime images ship a non-root user pre-created at $APP_UID (no need to
+# useradd our own — that collided with it, since recent images already claim UID 1000).
+RUN chown -R $APP_UID /app
+USER $APP_UID
 
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080

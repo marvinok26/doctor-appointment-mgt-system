@@ -21,8 +21,10 @@ services:
   redis:
     image: redis:7-alpine
     container_name: hospital-redis
-    ports:
-      - "6379:6379"
+    # No host port published: the API reaches this over the internal hospital-net bridge by
+    # service name ("redis:6379"), and not exposing it to the host avoids colliding with a
+    # locally-installed Redis (or anything else) already bound to 6379 on the machine — also just
+    # better practice generally (see README's guidance on not exposing DB/cache ports in prod).
     volumes:
       - redis-data:/data
     healthcheck:

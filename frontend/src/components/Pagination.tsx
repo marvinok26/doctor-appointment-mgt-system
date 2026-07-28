@@ -13,7 +13,7 @@ interface PaginationProps {
 }
 
 /** Page numbers to render, collapsing long runs to "1 … 4 5 6 … 12" around the current page. */
-function buildPageList(current: number, total: number): (number | "ellipsis")[] {
+export function buildPageList(current: number, total: number): (number | "ellipsis")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
 
   const pages = new Set<number>([1, total, current, current - 1, current + 1]);

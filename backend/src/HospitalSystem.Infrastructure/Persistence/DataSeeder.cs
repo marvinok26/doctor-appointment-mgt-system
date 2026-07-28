@@ -50,7 +50,10 @@ public static class DataSeeder
             {
                 UserName = "dr.amina@hospitalsystem.local",
                 Email = "dr.amina@hospitalsystem.local",
-                FullName = "Dr. Amina Wanjiru",
+                // Bare name, no "Dr." prefix — every display point (frontend cards, appointment
+                // lists, notification/reminder text) prepends "Dr." itself, so a seeded name that
+                // already includes it renders as "Dr. Dr. Amina Wanjiru".
+                FullName = "Amina Wanjiru",
                 EmailConfirmed = true
             };
             await userManager.CreateAsync(doctorUser, "ChangeMe!2026Secure");
