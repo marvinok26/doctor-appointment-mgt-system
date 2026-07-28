@@ -1,0 +1,21 @@
+## .NET
+**/bin/
+**/obj/
+*.user
+
+## Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+## Environment / secrets — never committed
+.env
+.env.*
+!.env.example
+
+## Internal-only docs — not part of the pushed repo
+PRINCIPLES.md
+
+## OS / editor
+.DS_Store
+*.log
