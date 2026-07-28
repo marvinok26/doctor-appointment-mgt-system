@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Asp.Versioning;
 using HospitalSystem.Api.BackgroundServices;
 using HospitalSystem.Api.Extensions;
@@ -25,7 +26,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IAppointmentNotifier, SignalRAppointmentNotifier>();
 
 // ---- Controllers, versioning, Swagger ----
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    // Enums serialize as their string name ("Requested", "Create", ...), never the raw int —
+    // the frontend's TypeScript types and every switch/lookup keyed by status name depend on this.
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddApiVersioning(options =>
     {
